@@ -8,12 +8,21 @@ import { webSocket } from "rxjs/webSocket";
 export class ConnectionSubscription<T>{
       
 
-      private connector : WebSocketConnector;
+      private connector$ : WebSocketConnector;
       public connectionId:number =0;
 
-      constructor(public connectionSubject:Observable<boolean>, public dataSubject:Observable<T>, parentConnector:WebSocketConnector){
-            this.connector  = parentConnector;
+      constructor(
+            public connectionSubject:Observable<boolean>, 
+            public dataSubject:Observable<T>, 
+            parentConnector:WebSocketConnector
+      ){
+            this.connector$  = parentConnector;
       }
+
+      openConnection(){
+            
+      }
+
 }
 
 

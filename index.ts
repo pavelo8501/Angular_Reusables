@@ -1,1 +1,1 @@
-export * from './services/ws/web-socket-service.service';
+export * from './angular-reusables.module';
