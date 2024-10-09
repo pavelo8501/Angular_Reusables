@@ -1,11 +1,23 @@
+import { WSRequestInterface } from "../requests/wsRequests"
 
 
 export interface WSResponseInterface<SourceDataType>{
     ok:boolean
     message:string|undefined
     errorCode:number|undefined
-    data: SourceDataType | undefined
+    result: SourceDataType | undefined
 }
+
+export interface WSResponseWithRequestInterface<ResponseDataType, RequestDataType> {
+    
+    request: WSRequestInterface<RequestDataType>
+    
+    ok: boolean
+    message: string | undefined
+    errorCode: number | undefined
+    result: ResponseDataType | undefined
+}
+
 
 export interface WSServiceResponseInterface extends WSResponseInterface<undefined>{
 
@@ -21,7 +33,7 @@ export class ServiceResponse implements WSServiceResponseInterface {
     errorCode : number | undefined
     
     message: undefined;
-    data: undefined
+    result: undefined
 
 
     constructor(source: WSServiceResponseInterface){

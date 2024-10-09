@@ -8,6 +8,6 @@ export interface WSRequestInterface<RequestDataType> {
       actionPath: string;
       action: string;
       module: string;
-      data: RequestDataType | RequestDataType[] | undefined;
+      data?: RequestDataType | RequestDataType[] | undefined;
 }
 
