@@ -45,8 +45,9 @@ export class WSService {
 				this.connections.push(newConnection);
 				return newSubscription.dataSubscription
 			} else {
-
-				throw new WSException("Not yet implemented", ErrorCodes.NOT_FOUND)
+				let newSubscriptionOnExistingConnection =  existingConnection.addMethod(request, undefined);
+				return newSubscriptionOnExistingConnection.dataSubscription
+				//throw new WSException("Not yet implemented", ErrorCodes.NOT_FOUND)
 			}
 		} catch (exception) {
 			if (exception instanceof WSException) {
@@ -74,7 +75,8 @@ export class WSService {
 				this.connections.push(newConnection);
 				return newSubscription
 			}else{
-				throw new WSException("Not yet implemented", ErrorCodes.NOT_FOUND)
+				let newSubscriptionOnExistingConnection = existingConnection.addMethod(request, undefined);
+				return newSubscriptionOnExistingConnection
 			}
 		}catch(exception){
 			if (exception instanceof WSException) {

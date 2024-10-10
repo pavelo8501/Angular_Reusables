@@ -7,7 +7,8 @@ export  interface  IWSBasicRequest {
 export interface WSRequestInterface<RequestDataType> {
       actionPath: string;
       action: string;
-      module: string;
+      type: string;
+      module?: string | undefined;
       data?: RequestDataType | RequestDataType[] | undefined;
 }
 

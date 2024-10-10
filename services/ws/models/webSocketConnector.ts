@@ -6,6 +6,7 @@ import { webSocket, WebSocketSubject } from "rxjs/webSocket";
 import { WSResponseInterface, WSResponseWithRequestInterface, WSServiceResponseInterface } from "../responses/apiResponse";
 import { WSService } from "../web-socket-service.service";
 import { ErrorCodes, WSException } from "./wsExceptions";
+import { json } from "stream/consumers";
 
 type WSResponse<ResponseDataType> = WSResponseInterface<ResponseDataType> | WSServiceResponseInterface;
 
@@ -70,7 +71,7 @@ export class WSConnectionMethod<RequestDataType, ResponseDataType>{
                   if (param!=undefined){
                         this.request.data = param
                   }
-                  console.log("sending request: " + this.request);
+                  console.log("sending request: " +  JSON.stringify(this.request));
                   this.websocket.next(this.request);
 
             } catch (e:any){
@@ -133,12 +134,12 @@ export class WebSocketConnector<RequestDataType, ResponseDataType> {
             }
                   
             if(existentMethod == undefined){
-                  let newMethods = new WSConnectionMethod<RequestDataType, ResponseDataType>(request, subscriber, this.websocket$, this);
-                  this.webMethods.push(newMethods);
+                  let newMethod = new WSConnectionMethod<RequestDataType, ResponseDataType>(request, subscriber, this.websocket$, this);
+                  this.webMethods.push(newMethod);
                   console.log(`new web method: ${request.action} for subscriber created`);
-                  return newMethods
+                  return newMethod
             }else{
-                  throw new WSException("Web method " + request.action +" for subscriber already exist",ErrorCodes.ALREADY_DEFINED);
+                  return existentMethod
             }
       }
 
@@ -159,7 +160,9 @@ export class WebSocketConnector<RequestDataType, ResponseDataType> {
 
             websocket$.subscribe({
                   next: (response) => {
+                        console.log("Response Received", response)
                         if (this.isServiceMessage(response)) {
+                              console.log("Service essage Received")
                               this.handleServiceMessage(response);
                         } else {
                               this.handleResponseMessage((response as WSResponseWithRequestInterface<ResponseDataType,RequestDataType>));
@@ -186,8 +189,11 @@ export class WebSocketConnector<RequestDataType, ResponseDataType> {
       }
 
       private handleServiceMessage(message: WSServiceResponseInterface) {
-            this.connected = true;
-            console.log("Service message received", message.serviceMessage);
+            if(message.ok){
+                  console.log("Service message", message.serviceMessage);
+            }else{
+                  console.error("Service message", `${message.serviceMessage} Error Code: ${message.errorCode}`);
+            }
       }
 
       private handleResponseMessage(message: WSResponseWithRequestInterface<ResponseDataType,RequestDataType>) {
