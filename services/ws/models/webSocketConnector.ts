@@ -24,7 +24,6 @@ export class WSDataSubscription<RequestDataType,ResponseDataType>{
       }
 
       public execute: (requestParam: RequestDataType | undefined) => Observable<ResponseDataType> = (requestParam: RequestDataType | undefined = undefined) => {
-           
            this.parent.sendRequest(requestParam)
            return this.dataObservable;
       };
@@ -68,11 +67,19 @@ export class WSConnectionMethod<RequestDataType, ResponseDataType>{
 
       public sendRequest(param: RequestDataType | undefined = undefined){
             try{
-                  if (param!=undefined){
-                        this.request.data = param
+                  if(this.parent.connected == true){
+                        if (param!=undefined){
+                             // this.request.data = param
+                              this.request.data!!.value = param
+                        }
+                        console.log("Sending request: " +  JSON.stringify(this.request));
+                        this.websocket.next(this.request);
+                  }else{
+                        let json = JSON.stringify(this.request)
+                        console.error(`Connection closed unable to send ${json}`);
+                        this.dataSubject.error("Connection closed unable to send");
+                        this.dataSubject.error("Trying to send " + json);
                   }
-                  console.log("sending request: " +  JSON.stringify(this.request));
-                  this.websocket.next(this.request);
 
             } catch (e:any){
                   if (e instanceof Error) {
@@ -93,7 +100,7 @@ export class WebSocketConnector<RequestDataType, ResponseDataType> {
       get connected(): boolean {
             return this._connected;
       }
-      set connected(val: boolean) {
+      private set connected(val: boolean) {
             if (val != this._connected) {
                   this._connected = val;
                   if (this.connected == true) {
