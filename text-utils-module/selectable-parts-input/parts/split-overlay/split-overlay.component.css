@@ -1,0 +1,22 @@
+
+
+.split-item-ccontent{
+    padding: 20px;
+}
+
+.btn-holder{
+    margin-top: 10px;
+    margin-bottom: 30px;
+}
+
+.accept-btn{
+    float: right;
+    height: 30px;
+    padding: 0px;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+.value-lbl{
+    margin-left: 10px;
+}

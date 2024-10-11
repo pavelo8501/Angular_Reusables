@@ -1,0 +1,14 @@
+
+
+<div class="split-overlay-bar">
+    @for (overlayItem of splitOverlays; track $index) {
+      <div class="part-container">
+        <split-overlay-part [name]="overlayItem.name" [value]="overlayItem.value"></split-overlay-part>
+      </div>
+    }
+</div>
+
+<div>
+    <label for="address-input">Address</label>
+    <input type="text" id="address-input" class="form-control"  [value]="address()" (input)="onInputChange($event)"/>
+</div>
