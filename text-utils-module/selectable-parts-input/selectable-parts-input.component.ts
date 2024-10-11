@@ -18,10 +18,16 @@ import {OverlayItem} from './models/overlayItem'
 export class SelectablePartsInputComponent implements OnInit {
 
 
+
+  namedChunks: { [key: string]: string } = {}; 
+   
+
   addressStr:string = ""
 
   //address = signal<string>("");
 
+
+  splitRegExp = input<RegExp>();
   address = model<string>("");
 
   onParts = output()
@@ -47,33 +53,22 @@ export class SelectablePartsInputComponent implements OnInit {
     
   }
 
+  getNamedChunks() {
+    return Object.entries(this.namedChunks).map(([key, value]) => ({ key, value }));
+  }
+
   splitAddress() {
-    const parts = this.address().split(',').map(part => part.trim());
-    
-    if (parts.length === 3) {
-      this.street = parts[0];
-      this.city = parts[1];
-      this.country = parts[2];
 
+    if (this.splitRegExp() != undefined){
+      const match = this.splitRegExp()!!.exec(this.address());
 
-      this.splitOverlays = [
-        new OverlayItem("Street", this.street), 
-        new OverlayItem("City", this.city), 
-        new OverlayItem("Country", this.country)
-      ]
-
-
-      this.showForm = true;
-    } else {
-      console.error('Invalid address format');
+      if (match && match.groups) {
+        this.namedChunks = match.groups; // Store the named groups (chunks)
+        this.showForm = true; // Show the form once the address is split
+      } else {
+        console.error('Address format does not match the RegExp');
+      }
     }
-
-    // Emit the separated parts to parent component or form controls
-    // this.partsEmitter.emit({
-    //   street: this.street,
-    //   city: this.city,
-    //   country: this.country
-    // });
 
   }
 

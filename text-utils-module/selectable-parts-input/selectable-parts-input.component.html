@@ -1,9 +1,9 @@
 
 
 <div class="split-overlay-bar">
-    @for (overlayItem of splitOverlays; track $index) {
+    @for (chunk of getNamedChunks(); track $index) {
       <div class="part-container">
-        <split-overlay-part [name]="overlayItem.name" [value]="overlayItem.value"></split-overlay-part>
+        <split-overlay-part [name]="chunk.key" [value]="chunk.value"></split-overlay-part>
       </div>
     }
 </div>
