@@ -12,7 +12,7 @@ import { DataSubscriberInterface } from './models/webSocketSubscriber';
 export class WSService {
 
   private _baseUrl = "ws://localhost:8080/ws"
-	private connections: WebSocketConnector<any,any>[] = [];
+  private connections: WebSocketConnector<any,any>[] = [];
 
   constructor() { }
 
@@ -28,26 +28,47 @@ export class WSService {
     this.baseUrl = url;
   }
 
-  public setUser(){
+	private _user: WSUserInterface | undefined
+	set user(user : WSUserInterface){
+		this._user = user
+	}
 
-  }
-  	public subscriMethod<RequestDataType, ResponseDataType>(
-		user: WSUserInterface,
+
+	public subscribeMethod<RequestDataType, ResponseDataType>(
 		request: WSRequestInterface<RequestDataType>,
+		user: WSUserInterface | undefined = undefined,
+		subscriber: DataSubscriberInterface | undefined = undefined
 		): WSDataSubscription<RequestDataType, ResponseDataType>{
 
 		try {
 			let existingConnection = this.connections.find(x => (x.request.actionPath == request.actionPath));
 			if (existingConnection == undefined) {
 				console.log("creating new connection")
-				let newConnection = new WebSocketConnector<RequestDataType, ResponseDataType>(user, request, undefined ,this);
-				let newSubscription = newConnection.addMethod(request, undefined)
+
+				let consUser : User
+				if(user == undefined){
+					if(this._user == undefined){
+						throw new WSException("user not initialized, and subscription method had no user specified", ErrorCodes.INCOMPLETE_SETUP)
+					}
+					consUser = this._user
+				}else{
+					consUser = user
+				}
+
+
+				let newConnection = new WebSocketConnector<RequestDataType, ResponseDataType>(consUser, request, undefined ,this);
+				let newSubscription 
+				if (subscriber != undefined){
+					newSubscription = newConnection.addMethod(request, subscriber)
+				}else{
+					newSubscription = newConnection.addMethod(request, undefined)
+				}
+				
 				this.connections.push(newConnection);
 				return newSubscription.dataSubscription
 			} else {
-				let newSubscriptionOnExistingConnection =  existingConnection.addMethod(request, undefined);
+				let newSubscriptionOnExistingConnection = existingConnection.addMethod(request, undefined);
 				return newSubscriptionOnExistingConnection.dataSubscription
-				//throw new WSException("Not yet implemented", ErrorCodes.NOT_FOUND)
 			}
 		} catch (exception) {
 			if (exception instanceof WSException) {
@@ -64,7 +85,7 @@ export class WSService {
 	public addDataSubscription<RequestDataType,ResponseDataType>(
 		user: WSUserInterface, 
 		request: WSRequestInterface<RequestDataType>, 
-		subscriber: DataSubscriberInterface<ResponseDataType>): WSConnectionMethod<RequestDataType, ResponseDataType> {
+		subscriber: DataSubscriberInterface): WSConnectionMethod<RequestDataType, ResponseDataType> {
 		
 		try{
 			let existingConnection = this.connections.find(x => (x.request.actionPath == request.actionPath));

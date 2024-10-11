@@ -4,6 +4,8 @@ export enum ErrorCodes {
     UNKNOWN_ERROR = 1000,
     NOT_FOUND = 1001,
     ALREADY_DEFINED = 1002,
+    DATA_RECEPIENT_NOT_FOUND = 1003,
+    INCOMPLETE_SETUP = 1004,
 }
 
 

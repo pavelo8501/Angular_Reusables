@@ -13,7 +13,7 @@ export interface WSRequestDataInterface<RequestDataType>{
 export interface WSRequestInterface<RequestDataType> {
       actionPath: string;
       action: string;
-    //  type: string;
+      subscriberId? :string | undefined; 
       module?: string | undefined;
      // data?: RequestDataType | RequestDataType[] | undefined;
       data?: WSRequestDataInterface<RequestDataType> | undefined;

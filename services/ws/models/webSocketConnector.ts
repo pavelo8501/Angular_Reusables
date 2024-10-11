@@ -32,7 +32,7 @@ export class WSDataSubscription<RequestDataType,ResponseDataType>{
 export class WSConnectionMethod<RequestDataType, ResponseDataType>{
       private parent: WebSocketConnector<RequestDataType, ResponseDataType>
       method: string
-      subscriber: DataSubscriberInterface<ResponseDataType> | undefined = undefined;
+      subscriber: DataSubscriberInterface | undefined = undefined;
       private request: WSRequestInterface<RequestDataType>
       private websocket : WebSocketSubject<WSMessage<RequestDataType, WSResponse < ResponseDataType >>>
 
@@ -43,7 +43,7 @@ export class WSConnectionMethod<RequestDataType, ResponseDataType>{
 
       constructor(
             request: WSRequestInterface<RequestDataType>, 
-            subscribrer: DataSubscriberInterface<ResponseDataType> | undefined,
+            subscribrer: DataSubscriberInterface | undefined,
             websocket: WebSocketSubject<WSMessage<RequestDataType, WSResponse<ResponseDataType>>>,
             parent: WebSocketConnector<RequestDataType, ResponseDataType>){
             this.request = request;
@@ -56,13 +56,21 @@ export class WSConnectionMethod<RequestDataType, ResponseDataType>{
       }
 
 
-      public submitData(data: ResponseDataType){
+      public submitData(data: ResponseDataType, onRequest: WSRequestInterface<RequestDataType> | undefined = undefined){
 
-            if(this.subscriber!= undefined){
-                  this.subscriber(data)
+            if (onRequest != undefined){
+                  if (this.subscriber != undefined) {
+                        if (onRequest.subscriberId != undefined) {
+                              if (this.subscriber.subscriberId == onRequest.subscriberId) {
+                                    this.dataSubject.next((data as ResponseDataType))
+                              }
+                        }else{
+                              throw new WSException("Trying to send subscribed specific response to subscriber that do not match with reponse", ErrorCodes.DATA_RECEPIENT_NOT_FOUND)
+                        }
+                  }
+            }else{
+                  this.dataSubject.next((data as ResponseDataType))
             }
-
-            this.dataSubject.next((data as ResponseDataType))
       }
 
       public sendRequest(param: RequestDataType | undefined = undefined){
@@ -121,7 +129,7 @@ export class WebSocketConnector<RequestDataType, ResponseDataType> {
 
       private webMethods: WSConnectionMethod<RequestDataType, ResponseDataType>[] = [];
    
-      constructor(user: User, request: WSRequestInterface<RequestDataType>, subscriber: DataSubscriberInterface<ResponseDataType>| undefined, serviss: WSService) {
+      constructor(user: User, request: WSRequestInterface<RequestDataType>, subscriber: DataSubscriberInterface| undefined, serviss: WSService) {
             this.request = request;
             this.parent = serviss;
             this.user = user;
@@ -130,7 +138,7 @@ export class WebSocketConnector<RequestDataType, ResponseDataType> {
 
       public addMethod(
             request: WSRequestInterface<RequestDataType>, 
-            subscriber: DataSubscriberInterface<ResponseDataType> | undefined = undefined
+            subscriber: DataSubscriberInterface | undefined = undefined
       ): WSConnectionMethod<RequestDataType, ResponseDataType>{
 
             let existentMethod: WSConnectionMethod<any, any> | undefined ;
@@ -150,7 +158,7 @@ export class WebSocketConnector<RequestDataType, ResponseDataType> {
             }
       }
 
-      private initConnection(request: WSRequestInterface<RequestDataType>, subscriber: DataSubscriberInterface<ResponseDataType>| undefined = undefined): WebSocketSubject<WSMessage<RequestDataType, WSResponse<ResponseDataType>>> {
+      private initConnection(request: WSRequestInterface<RequestDataType>, subscriber: DataSubscriberInterface| undefined = undefined): WebSocketSubject<WSMessage<RequestDataType, WSResponse<ResponseDataType>>> {
             
             
             let connStatusSubject: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
@@ -206,10 +214,21 @@ export class WebSocketConnector<RequestDataType, ResponseDataType> {
       private handleResponseMessage(message: WSResponseWithRequestInterface<ResponseDataType,RequestDataType>) {
             console.log("Data message received:", message);
             if(message.ok){
-                  let methodSubscribers = this.webMethods.filter(x => x.method == message.request.action);
+
+                  //Select subscribers that accept broadcast meessages
+                  let broadcastSubscribers = this.webMethods.filter(x => x.method == message.request.action && x.subscriber == undefined);
                   if (message.result != undefined){
                         let dataReceived = message.result;
-                        methodSubscribers.forEach(x => x.submitData(dataReceived))
+                        broadcastSubscribers.forEach(x => x.submitData(dataReceived));
+
+                        // sellect subscribers with specific subscriberId
+                        // Normaly should be only one. If not warning is issued.
+                        let specificSubscribers = this.webMethods.filter(x => x.method == message.request.action && x.subscriber?.subscriberId == message.request.subscriberId);
+                        if (specificSubscribers.length > 1) {
+                              console.warn(specificSubscribers.length + ` subscribers for method ${message.request.action} with subscriberId ${message.request.subscriberId} . Normally should be only one subscriber`);
+                        }
+                        specificSubscribers.forEach(x => x.submitData(dataReceived, message.request));
+
                   }
             }
       }
